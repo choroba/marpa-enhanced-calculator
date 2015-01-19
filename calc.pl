@@ -18,6 +18,8 @@ Assign     ::= Var ('=') Expression        action => store
 Output     ::= ('print') List              action => show
 List       ::= Expression (',') List       action => concat
              | Expression
+             | String (',') List           action => concat
+             | String
 Expression ::= ('(') Expression (')')                            assoc => group
              | number                      action => numify
              | Var                         action => interpolate
@@ -26,6 +28,7 @@ Expression ::= ('(') Expression (')')                            assoc => group
              | Expression ('/') Expression action => divide
             || Expression ('+') Expression action => add
              | Expression ('-') Expression action => subtract
+String     ::= ('"') string ('"')
 Var        ::= varname
 
 sign_maybe ~ [+-] | empty
@@ -46,6 +49,7 @@ varname    ~ alpha alnum
 alpha      ~ [a-zA-Z]
 alnum      ~ [a-zA-Z0-9]+
 
+string     ~ [^"]*
 empty      ~
 separ      ~ [\n;]+
 :discard   ~ whitespace
