@@ -19,8 +19,20 @@ Expression ::= ('(') Expression (')')                            assoc => group
             || Expression ('+') Expression action => add
              | Expression ('-') Expression action => subtract
 
-number     ~ [-0-9.]+
+sign_maybe ~ [+-] | empty
+digit      ~ [0-9]
+non_zero   ~ [1-9]
+digit_any  ~ digit*
+digit_many ~ digit+
+E          ~ [Ee] sign_maybe digit_many
+E_maybe    ~ E | empty
 
+number     ~ sign_maybe digit_many E
+           | sign_maybe digit_any '.' digit_many E_maybe
+           | sign_maybe digit_many E_maybe
+           | sign_maybe non_zero digit_any
+
+empty      ~
 :discard   ~ whitespace
 whitespace ~ [ \t]+
 
@@ -41,4 +53,4 @@ my $input = shift;
 my $grammar = 'Marpa::R2::Scanless::G'->new({ source => \$rules });
 my $value   = $grammar->parse(\$input, { semantics_package => 'main' });
 
-print Dumper $value;
+print Dumper $$value;
