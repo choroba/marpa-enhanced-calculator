@@ -10,14 +10,23 @@ my $rules = << '__G__';
 lexeme default = latm => 1
 :default ::= action => single
 
-:start   ::= Expression
+:start   ::= Program
+Program    ::= Statement+                  action => none
+Statement  ::= Assign separ                action => none
+             | Output separ                action => none
+Assign     ::= Var ('=') Expression        action => store
+Output     ::= ('print') List              action => show
+List       ::= Expression (',') List       action => concat
+             | Expression
 Expression ::= ('(') Expression (')')                            assoc => group
              | number                      action => numify
+             | Var                         action => interpolate
             || Expression ('^') Expression action => power       assoc => right
             || Expression ('*') Expression action => multiply
              | Expression ('/') Expression action => divide
             || Expression ('+') Expression action => add
              | Expression ('-') Expression action => subtract
+Var        ::= varname
 
 sign_maybe ~ [+-] | empty
 digit      ~ [0-9]
@@ -32,7 +41,13 @@ number     ~ sign_maybe digit_many E
            | sign_maybe digit_many E_maybe
            | sign_maybe non_zero digit_any
 
+varname    ~ alpha
+varname    ~ alpha alnum
+alpha      ~ [a-zA-Z]
+alnum      ~ [a-zA-Z0-9]+
+
 empty      ~
+separ      ~ [\n;]+
 :discard   ~ whitespace
 whitespace ~ [ \t]+
 
@@ -40,17 +55,21 @@ __G__
 
 my %vars;
 
+sub none        {}
 sub single      { $_[1] }
 sub numify      { 0 + $_[1] }
+sub show        { say $_[1] }
+sub concat      { $_[1] . $_[2] }
 sub multiply    { $_[1] * $_[2] }
 sub divide      { $_[1] / $_[2] }
 sub add         { $_[1] + $_[2] }
 sub subtract    { $_[1] - $_[2] }
 sub power       { $_[1] ** $_[2] }
+sub store       { $vars{ $_[1] } = $_[2] }
+sub interpolate { $vars{ $_[1] } // die "Unknown variable $_[1]" }
 
 my $input = shift;
 
 my $grammar = 'Marpa::R2::Scanless::G'->new({ source => \$rules });
 my $value   = $grammar->parse(\$input, { semantics_package => 'main' });
 
-print Dumper $$value;
