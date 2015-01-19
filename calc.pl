@@ -75,5 +75,22 @@ sub interpolate { $vars{ $_[1] } // die "Unknown variable $_[1]" }
 my $input = shift;
 
 my $grammar = 'Marpa::R2::Scanless::G'->new({ source => \$rules });
-my $value   = $grammar->parse(\$input, { semantics_package => 'main' });
+my $recce = 'Marpa::R2::Scanless::R'->new({ grammar           => $grammar,
+                                            semantics_package => 'main',
+                                            rejection         => 'event',
+                                          });
+my $last_pos = -1;
+for ( $recce->read(\$input);
+      $recce->pos < length $input;
+      $recce->resume
+    ) {
+    if (grep 'separ' eq $_, @{ $recce->terminals_expected }) {
+        $recce->lexeme_read('separ', $recce->pos, 0);
+        $last_pos = $recce->pos;
+        warn 'Semicolon inserted at ', $last_pos;
+    } else {
+        die "No lexeme found at ", $recce->pos;
+    }
+}
+$recce->value;
 
