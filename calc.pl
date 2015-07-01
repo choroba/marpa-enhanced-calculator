@@ -72,7 +72,7 @@ sub power       { $_[1] ** $_[2] }
 sub store       { $vars{ $_[1] } = $_[2] }
 sub interpolate { $vars{ $_[1] } // die "Unknown variable $_[1]" }
 
-my $input = shift;
+my $input = shift . ';';
 
 my $grammar = 'Marpa::R2::Scanless::G'->new({ source => \$rules });
 my $recce = 'Marpa::R2::Scanless::R'->new({ grammar           => $grammar,
