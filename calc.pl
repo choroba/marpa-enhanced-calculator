@@ -15,7 +15,7 @@ Program    ::= Statement+                  action => none
 Statement  ::= Assign separ                action => none
              | Output separ                action => none
 Assign     ::= Var ('=') Expression        action => store
-Output     ::= ('print') List              action => show
+Output     ::= print List                  action => show
 List       ::= Expression (',') List       action => concat
              | Expression
              | String (',') List           action => concat
@@ -44,6 +44,8 @@ number     ~ sign_maybe digit_many E
            | sign_maybe digit_many E_maybe
            | sign_maybe non_zero digit_any
 
+print      ~ 'print'
+
 varname    ~ alpha
 varname    ~ alpha alnum
 alpha      ~ [a-zA-Z]
@@ -62,7 +64,7 @@ my %vars;
 sub none        {}
 sub single      { $_[1] }
 sub numify      { 0 + $_[1] }
-sub show        { say $_[1] }
+sub show        { say $_[2] }
 sub concat      { $_[1] . $_[2] }
 sub multiply    { $_[1] * $_[2] }
 sub divide      { $_[1] / $_[2] }
@@ -89,8 +91,25 @@ for ( $recce->read(\$input);
         $last_pos = $recce->pos;
         warn 'Semicolon inserted at ', $last_pos;
     } else {
-        die "No lexeme found at ", $recce->pos;
+        PARSE_ERROR($input, $recce->pos, $recce->terminals_expected);
     }
 }
 $recce->value;
 
+
+sub PARSE_ERROR {
+    my ($input, $pos, $expected) = @_;
+
+    my $line = 1+(substr($input,0,$pos) =~ tr/\n/\n/);
+    my $eol = index($input,"\n",$pos);
+    $eol = length($input) if $eol < 0;
+
+    my $at;
+    if ($eol == $pos) {
+        $at = "end of line";
+    } else {
+        $at = "'" . substr($input, $pos, $eol - $pos) . "'";
+    }
+
+    die "Parse error on line $line at $at, expecting: @$expected\n";
+}
