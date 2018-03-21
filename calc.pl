@@ -10,25 +10,25 @@ my $rules = << '__G__';
 lexeme default = latm => 1
 :default ::= action => single
 
-:start   ::= Program
-Program    ::= Statement+                  action => none
-Statement  ::= Assign separ                action => none
-             | Output separ                action => none
-Assign     ::= Var ('=') Expression        action => store
-Output     ::= ('print') List              action => show
-List       ::= Expression (',') List       action => concat
+:start     ::= Program
+Program    ::= Statement+                    action => none
+Statement  ::= Assign separ                  action => none
+             | Output separ                  action => none
+Assign     ::= Var (eq) Expression           action => store
+Output     ::= (print) List                  action => show
+List       ::= Expression (comma) List       action => concat
              | Expression
-             | String (',') List           action => concat
+             | String (comma) List           action => concat
              | String
-Expression ::= ('(') Expression (')')                            assoc => group
-             | number                      action => numify
-             | Var                         action => interpolate
-            || Expression ('^') Expression action => power       assoc => right
-            || Expression ('*') Expression action => multiply
-             | Expression ('/') Expression action => divide
-            || Expression ('+') Expression action => add
-             | Expression ('-') Expression action => subtract
-String     ::= ('"') string ('"')
+Expression ::= (left_par) Expression (right_par)                 assoc => group
+             | number                        action => numify
+             | Var                           action => interpolate
+            || Expression (power) Expression action => power     assoc => right
+            || Expression (times) Expression action => multiply
+             | Expression (slash) Expression action => divide
+            || Expression (plus)  Expression action => add
+             | Expression (minus) Expression action => subtract
+String     ::= (quote) string (quote)
 Var        ::= varname
 
 sign_maybe ~ [+-] | empty
@@ -43,6 +43,18 @@ number     ~ sign_maybe digit_many E
            | sign_maybe digit_any '.' digit_many E_maybe
            | sign_maybe digit_many E_maybe
            | sign_maybe non_zero digit_any
+
+print      ~ 'print'
+eq         ~ '='
+comma      ~ ','
+left_par   ~ '('
+right_par  ~ ')'
+quote      ~ '"'
+power      ~ '^'
+times      ~ '*'
+slash      ~ '/'
+plus       ~ '+'
+minus      ~ '-'
 
 varname    ~ alpha
 varname    ~ alpha alnum
@@ -88,9 +100,14 @@ for ( $recce->read(\$input);
         $recce->lexeme_read('separ', $recce->pos, 0);
         $last_pos = $recce->pos;
         warn 'Semicolon inserted at ', $last_pos;
+
     } else {
-        die "No lexeme found at ", $recce->pos;
+        my $context = substr $input, $recce->pos;
+        my ($line, $col) = $recce->line_column;
+        my @expected = @{ $recce->terminals_expected };
+
+        die "Parse error on line $line column $col at '$context', ",
+            "expecting: @expected\n";
     }
 }
 $recce->value;
-
