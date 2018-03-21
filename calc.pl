@@ -15,7 +15,7 @@ Program    ::= Statement+                  action => none
 Statement  ::= Assign separ                action => none
              | Output separ                action => none
 Assign     ::= Var ('=') Expression        action => store
-Output     ::= print List                  action => show
+Output     ::= (print) List                action => show
 List       ::= Expression (',') List       action => concat
              | Expression
              | String (',') List           action => concat
@@ -64,7 +64,7 @@ my %vars;
 sub none        {}
 sub single      { $_[1] }
 sub numify      { 0 + $_[1] }
-sub show        { say $_[2] }
+sub show        { say $_[1] }
 sub concat      { $_[1] . $_[2] }
 sub multiply    { $_[1] * $_[2] }
 sub divide      { $_[1] / $_[2] }
@@ -100,7 +100,7 @@ $recce->value;
 sub PARSE_ERROR {
     my ($input, $pos, $expected) = @_;
 
-    my $line = 1+(substr($input,0,$pos) =~ tr/\n/\n/);
+    my $line = 1+(substr($input,0,$pos) =~ tr/\n//);
     my $eol = index($input,"\n",$pos);
     $eol = length($input) if $eol < 0;
 
