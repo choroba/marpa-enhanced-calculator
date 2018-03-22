@@ -15,7 +15,7 @@ Program    ::= Statement+                  action => none
 Statement  ::= Assign separ                action => none
              | Output separ                action => none
 Assign     ::= Var ('=') Expression        action => store
-Output     ::= ('print') List              action => show
+Output     ::= (print) List                action => show
 List       ::= Expression (',') List       action => concat
              | Expression
              | String (',') List           action => concat
@@ -43,6 +43,8 @@ number     ~ sign_maybe digit_many E
            | sign_maybe digit_any '.' digit_many E_maybe
            | sign_maybe digit_many E_maybe
            | sign_maybe non_zero digit_any
+
+print      ~ 'print'
 
 varname    ~ alpha
 varname    ~ alpha alnum
@@ -88,9 +90,15 @@ for ( $recce->read(\$input);
         $recce->lexeme_read('separ', $recce->pos, 0);
         $last_pos = $recce->pos;
         warn 'Semicolon inserted at ', $last_pos;
-    } else {
-        die "No lexeme found at ", $recce->pos;
+    }
+
+    else {
+        my $pos = $recce->pos;
+        my $context = substr($input, $pos);
+        my ($line, $col) = $recce->line_column;
+        my @expected = @{$recce->terminals_expected};
+
+        die "Parse error on line $line column $col at '$context', expecting: @expected\n";
     }
 }
 $recce->value;
-
