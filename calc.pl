@@ -90,26 +90,15 @@ for ( $recce->read(\$input);
         $recce->lexeme_read('separ', $recce->pos, 0);
         $last_pos = $recce->pos;
         warn 'Semicolon inserted at ', $last_pos;
-    } else {
-        PARSE_ERROR($input, $recce->pos, $recce->terminals_expected);
+    }
+
+    else {
+        my $pos = $recce->pos;
+        my $context = substr($input, $pos);
+        my ($line, $col) = $recce->line_column;
+        my @expected = @{$recce->terminals_expected};
+
+        die "Parse error on line $line column $col at '$context', expecting: @expected\n";
     }
 }
 $recce->value;
-
-
-sub PARSE_ERROR {
-    my ($input, $pos, $expected) = @_;
-
-    my $line = 1+(substr($input,0,$pos) =~ tr/\n//);
-    my $eol = index($input,"\n",$pos);
-    $eol = length($input) if $eol < 0;
-
-    my $at;
-    if ($eol == $pos) {
-        $at = "end of line";
-    } else {
-        $at = "'" . substr($input, $pos, $eol - $pos) . "'";
-    }
-
-    die "Parse error on line $line at $at, expecting: @$expected\n";
-}
