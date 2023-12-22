@@ -20,6 +20,7 @@ My other Marpa-related answers on forums:
  - [Arbitrary Boolean Expressions](http://www.perlmonks.org/?node_id=1210838)
  - [Parsing bracket formatted file](https://www.perlmonks.org/?node_id=11147096)
  - [Parsing Emacs Lisp sexpr](https://www.perlmonks.org/?node_id=11115349)
+ - [Parsing nested angle brackets](https://www.perlmonks.org/?node_id=11112818)
 
 And the most advanced example so far, the parser of the Karel language:
 
